@@ -1,4 +1,4 @@
-import { Webhook } from "svix";
+\import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
 import { User } from "@prisma/client";
@@ -79,13 +79,16 @@ export async function POST(req: Request) {
     });
 
     // Update user's metadata in Clerk with the role information
-    const client = await clerkClient();
-    await client.users.updateUserMetadata(data.id, {
-      privateMetadata: {
-        role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
-      },
-    });
+    
+    if (evt.type === "user.created") {
+      const client = await clerkClient();
+      await client.users.updateUserMetadata(data.id, {
+          privateMetadata: {
+            role: dbUser.role || "USER",
+          },
+      });
   }
+}
 
   // When user is deleted
   if (evt.type === "user.deleted") {
