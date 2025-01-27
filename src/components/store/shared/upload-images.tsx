@@ -83,7 +83,7 @@ const ImageUploadStore: FC<ImageUploadProps> = ({
           const onClick = () => {
             open();
           };
-          /*shweta*/
+
           return (
             <>
               <button
