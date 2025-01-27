@@ -79,8 +79,7 @@ export async function POST(req: Request) {
     });
 
     // Update user's metadata in Clerk with the role information
-    const client = await clerkClient();
-    await client.users.updateUserMetadata(data.id, {
+    await clerkClient.users.updateUserMetadata(data.id, {
       privateMetadata: {
         role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
       },
