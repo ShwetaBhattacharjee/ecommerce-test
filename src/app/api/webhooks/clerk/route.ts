@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
 import { User } from "@prisma/client";
 import { db } from "@/lib/db";
+
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
+    return new Response("Error occurred -- no svix headers", {
       status: 400,
     });
   }
@@ -44,23 +44,24 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occured", {
+    return new Response("Error occurred", {
       status: 400,
     });
   }
+
   // When user is created or updated
   if (evt.type === "user.created" || evt.type === "user.updated") {
-    // Parse the incoming event data
     const data = JSON.parse(body).data;
 
-    // Create a user object with relevant properties
+    // Extract relevant properties from Clerk event data
     const user: Partial<User> = {
       id: data.id,
       name: `${data.first_name} ${data.last_name}`,
       email: data.email_addresses[0].email_address,
       picture: data.image_url,
+      role: data.private_metadata?.role || "USER", // Default to "USER" if role is missing
     };
-    // If user data is invalid, exit the function
+
     if (!user) return;
 
     // Upsert user in the database (update if exists, create if not)
@@ -68,35 +69,36 @@ export async function POST(req: Request) {
       where: {
         email: user.email,
       },
-      update: user,
+      update: {
+        ...user,
+      },
       create: {
-        id: user.id!,
-        name: user.name!,
-        email: user.email!,
-        picture: user.picture!,
-        role: user.role || "USER", // Default role to "USER" if not provided
+        ...user,
       },
     });
 
     // Update user's metadata in Clerk with the role information
     await clerkClient.users.updateUserMetadata(data.id, {
       privateMetadata: {
-        role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
+        role: dbUser.role, // Use the database role to update Clerk metadata
       },
     });
   }
 
   // When user is deleted
   if (evt.type === "user.deleted") {
-    // Parse the incoming event data to get the user ID
     const userId = JSON.parse(body).data.id;
 
-    // Delete the user from the database based on the user ID
-    await db.user.delete({
-      where: {
-        id: userId,
-      },
-    });
+    try {
+      await db.user.delete({
+        where: {
+          id: userId,
+        },
+      });
+      console.log(`User with ID ${userId} deleted from the database.`);
+    } catch (error) {
+      console.error(`Failed to delete user with ID ${userId}:`, error);
+    }
   }
 
   return new Response("", { status: 200 });
