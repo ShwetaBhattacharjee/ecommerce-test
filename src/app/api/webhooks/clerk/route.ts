@@ -3,39 +3,34 @@ import { headers } from "next/headers";
 import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
 import { User } from "@prisma/client";
 import { db } from "@/lib/db";
+
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
+  // Fetch the Webhook Secret from the environment
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error(
-      "Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
-    );
+    throw new Error("Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local");
   }
 
-  // Get the headers
+  // Get the headers from the request
   const headerPayload = headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
 
-  // If there are no headers, error out
+  // Validate headers
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
-      status: 400,
-    });
+    return new Response("Error occurred -- no svix headers", { status: 400 });
   }
 
-  // Get the body
+  // Get the request payload
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
-  // Create a new Svix instance with your secret.
+  // Initialize the webhook verification
   const wh = new Webhook(WEBHOOK_SECRET);
-
   let evt: WebhookEvent;
 
-  // Verify the payload with the headers
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -44,22 +39,22 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occured", {
-      status: 400,
-    });
+    return new Response("Error occurred", { status: 400 });
   }
-  // When user is created or updated
+
+  // Handle user creation and updates
   if (evt.type === "user.created" || evt.type === "user.updated") {
-    // Parse the incoming event data
     const data = JSON.parse(body).data;
 
-    // Create a user object with relevant properties
+    // Create a user object to update or insert into the database
     const user: Partial<User> = {
       id: data.id,
       name: `${data.first_name} ${data.last_name}`,
       email: data.email_addresses[0].email_address,
       picture: data.image_url,
+      role: data.private_metadata?.role || "USER", // Use role from metadata if present, default to "USER"
     };
+
     // If user data is invalid, exit the function
     if (!user) return;
 
@@ -74,22 +69,21 @@ export async function POST(req: Request) {
         name: user.name!,
         email: user.email!,
         picture: user.picture!,
-        role: user.role || "USER", // Default role to "USER" if not provided
+        role: user.role!, // Make sure the role is set
       },
     });
 
-    // Update user's metadata in Clerk with the role information
+    // Update Clerk's metadata with the user's role from the database
     const client = await clerkClient();
     await client.users.updateUserMetadata(data.id, {
       privateMetadata: {
-        role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
+        role: dbUser.role || "USER", // Sync role from database to Clerk
       },
     });
   }
 
-  // When user is deleted
+  // Handle user deletion
   if (evt.type === "user.deleted") {
-    // Parse the incoming event data to get the user ID
     const userId = JSON.parse(body).data.id;
 
     // Delete the user from the database based on the user ID
