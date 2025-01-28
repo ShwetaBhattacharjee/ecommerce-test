@@ -44,17 +44,8 @@ export default function ApplyCouponForm({
       setCartData(res.cart);
       toast.success(res.message);
     } catch (error: any) {
-      console.log(error);
-
-      // Check if the error is related to coupon validity
-      if (
-        error?.message.includes("Coupon is expired") ||
-        error?.message.includes("not yet active")
-      ) {
-        toast.error("This coupon is either expired or not yet active.");
-      } else {
-        toast.error("An error occurred while applying the coupon.");
-      }
+      // Handling form submission errors
+      toast.error(error.toString());
     }
   };
 
