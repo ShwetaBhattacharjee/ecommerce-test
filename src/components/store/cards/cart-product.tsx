@@ -167,10 +167,13 @@ const CartProduct: FC<Props> = ({
               <div className="absolute top-0 right-0">
                 <span className="mr-2.5 cursor-pointer inline-block">
                   <Heart
-                    className={cn("w-4 cursor-pointer", {
-                      "text-red-500": isInWishlist,
-                    })}
-                    onClick={handleWishlistToggle}
+                    className={cn(
+                      "w-5 h-5 cursor-pointer border-2 rounded-full",
+                      {
+                        "border-black text-black": !isInWishlist, // Black border and empty heart when not in wishlist
+                        "border-red-500 text-red-500": isInWishlist, // Red filled heart when in wishlist
+                      }
+                    )}
                   />
                 </span>
                 <span className="cursor-pointer inline-block">
