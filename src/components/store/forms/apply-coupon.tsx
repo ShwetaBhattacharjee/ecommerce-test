@@ -22,31 +22,35 @@ export default function ApplyCouponForm({
   cartId: string;
   setCartData: Dispatch<SetStateAction<CartWithCartItemsType>>;
 }) {
-  // Form hook for managing form state and validation
   const form = useForm<z.infer<typeof ApplyCouponFormSchema>>({
-    mode: "onChange", // Form validation mode
-    resolver: zodResolver(ApplyCouponFormSchema), // Resolver for form validation
-    defaultValues: {
-      // Setting default form values from data (if available)
-      coupon: "",
-    },
+    mode: "onChange",
+    resolver: zodResolver(ApplyCouponFormSchema),
+    defaultValues: { coupon: "" },
   });
 
-  // Loading status& Errors
   const { errors, isSubmitting } = form.formState;
 
-  // Submit handler for form submission
   const handleSubmit = async (
     values: z.infer<typeof ApplyCouponFormSchema>
   ) => {
     try {
       const res = await applyCoupon(values.coupon, cartId);
+
+      if (!res.isSuccess) {
+        throw new Error(res.message || "An unknown error occurred");
+      }
+
       setCartData(res.cart);
       toast.success(res.message);
     } catch (error: any) {
-      // Handling form submission errors
-      console.log(error);
-      toast.error(error.toString());
+      console.error("Coupon error:", error);
+      if (error.message.includes("Coupon is expired")) {
+        toast.error("The coupon is expired. Please check the dates.");
+      } else if (error.message.includes("Coupon is not yet active")) {
+        toast.error("The coupon is not yet active. Please try again later.");
+      } else {
+        toast.error("Error: " + error.message);
+      }
     }
   };
 
@@ -54,7 +58,6 @@ export default function ApplyCouponForm({
     <div className="rounded-xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          {/* Form items */}
           <div className="relative bg-gray-100 rounded-2xl shadow-sm p-1.5 hover:shadow-md">
             <FormField
               control={form.control}
