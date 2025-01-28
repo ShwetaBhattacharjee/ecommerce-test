@@ -17,13 +17,10 @@ export default function ProductCard({ product }: { product: ProductType }) {
   const [variant, setVariant] = useState<VariantSimplified>(variants[0]);
   const { variantSlug, variantName, images, sizes } = variant;
 
-  const handleAddToWishlist = async () => {
+  const handleaddToWishlist = async () => {
     try {
-      // Ensure you're passing the correct product and variant IDs
       const res = await addToWishlist(id, variant.variantId);
-      if (res) {
-        toast.success("Product successfully added to wishlist.");
-      }
+      if (res) toast.success("Product successfully added to wishlist.");
     } catch (error: any) {
       toast.error(error.toString());
     }
@@ -85,7 +82,7 @@ export default function ProductCard({ product }: { product: ProductType }) {
             <Button
               variant="black"
               size="icon"
-              onClick={handleAddToWishlist} // Ensure this calls the correct handler
+              onClick={() => handleaddToWishlist()}
             >
               <Heart className="w-5" />
             </Button>
