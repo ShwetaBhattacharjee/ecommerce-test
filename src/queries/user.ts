@@ -783,20 +783,19 @@ export const updateCartWithLatest = async (
  * @param sizeId - Optional size ID if applicable.
  * @returns The created wishlist item.
  */
+// Add a product to the user's wishlist.
 export const addToWishlist = async (
   productId: string,
   variantId: string,
   sizeId?: string
 ) => {
-  // Ensure the user is authenticated
   const user = await currentUser();
 
   if (!user) throw new Error("Unauthenticated.");
-
   const userId = user.id;
 
   try {
-    const existingWIshlistItem = await db.wishlist.findFirst({
+    const existingWishlistItem = await db.wishlist.findFirst({
       where: {
         userId,
         productId,
@@ -804,7 +803,7 @@ export const addToWishlist = async (
       },
     });
 
-    if (existingWIshlistItem) {
+    if (existingWishlistItem) {
       throw new Error("Product is already in the wishlist");
     }
 
@@ -820,6 +819,68 @@ export const addToWishlist = async (
     throw error;
   }
 };
+
+// Remove a product from the user's wishlist.
+export const removeFromWishlist = async (
+  productId: string,
+  variantId: string,
+  sizeId?: string
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+  const userId = user.id;
+
+  try {
+    const existingWishlistItem = await db.wishlist.findFirst({
+      where: {
+        userId,
+        productId,
+        variantId,
+        sizeId,
+      },
+    });
+
+    if (!existingWishlistItem) {
+      throw new Error("Product not found in wishlist");
+    }
+
+    await db.wishlist.delete({
+      where: {
+        id: existingWishlistItem.id,
+      },
+    });
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Check if the product is in the wishlist
+export const checkIfProductInWishlist = async (
+  productId: string,
+  variantId: string,
+  sizeId?: string
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+  const userId = user.id;
+
+  const wishlistItem = await db.wishlist.findFirst({
+    where: {
+      userId,
+      productId,
+      variantId,
+      sizeId,
+    },
+  });
+
+  return !!wishlistItem;
+};
+
+/*change*/
 
 /*
  * Function: updateCheckoutProductstWithLatest
