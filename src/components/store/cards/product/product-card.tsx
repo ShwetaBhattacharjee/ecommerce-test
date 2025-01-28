@@ -98,9 +98,8 @@ export default function ProductCard({ product }: { product: ProductType }) {
             </Button>
             <Button variant="black" size="icon" onClick={handleWishlistToggle}>
               <Heart
-                className={cn("w-5 h-5 cursor-pointer border-2 rounded-full", {
-                  "border-black text-black": !isInWishlist, // Black border and empty heart when not in wishlist
-                  "border-red-500 text-red-500": isInWishlist, // Red filled heart when in wishlist
+                className={cn("w-5 cursor-pointer", {
+                  "text-red-500": isInWishlist,
                 })}
               />
             </Button>
