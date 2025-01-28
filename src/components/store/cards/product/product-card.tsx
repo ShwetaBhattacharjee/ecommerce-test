@@ -1,3 +1,4 @@
+"use client";
 import { ProductType, VariantSimplified } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
