@@ -2,6 +2,7 @@
 
 // React, Next.js
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 // Icons
 import "/node_modules/flag-icons/css/flag-icons.min.css";
@@ -27,8 +28,14 @@ export default function CountryLanguageCurrencySelector({
 
   // State to manage countries dropdown visibility
   const [show, setshow] = useState(false);
+  const [langShow, setLangShow] =  useState<boolean>(false);
+  const [lang, setLang] =  useState<string>("English");
+
+  
+
 
   const handleCountryClick = async (country: string) => {
+
     // Find the country data based on the selected country name
     const countryData = countries.find((c) => c.name === country);
 
@@ -54,6 +61,22 @@ export default function CountryLanguageCurrencySelector({
       } catch (error) {}
     }
   };
+const openLanOption=()=>{
+  setLangShow(!langShow)
+}
+const { i18n } = useTranslation();
+
+const changeLanguage = (lng:any) => {
+  if(lng == "en"){
+    setLang("English")
+  }else{
+    setLang("Arabic ")
+
+  }
+  setLangShow(false)
+  i18n.changeLanguage(lng);
+};
+const { t } = useTranslation();
 
   return (
     <div className="relative inline-block group">
@@ -81,7 +104,9 @@ export default function CountryLanguageCurrencySelector({
         <div className="relative mt-12 -ml-32 w-[300px]  bg-white rounded-[24px] text-main-primary pt-2 px-6 pb-6 z-50 shadow-lg">
           {/* Triangle */}
           <div className="w-0 h-0 absolute -top-1.5 right-24 border-l-[10px] border-l-transparent border-b-[10px] border-white border-r-[10px] border-r-transparent" />
-          <div className="mt-4 leading-6 text-[20px] font-bold">Ship to</div>
+          <div className="mt-4 leading-6 text-[20px] font-bold">
+          {t('Ship_to')} 
+          </div>
           <div className="mt-2">
             <div className="relative text-main-primary bg-white rounded-lg">
               <CountrySelector
@@ -97,18 +122,25 @@ export default function CountryLanguageCurrencySelector({
               />
               <div>
                 <div className="mt-4 leading-6 text-[20px] font-bold">
-                  Language
+                {t('Language')} 
                 </div>
-                <div className="relative mt-2.5 h-10 py-0 px-3 border-[1px] border-black/20 rounded-lg  flex items-center cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap">
-                  <div className="align-middle">English</div>
+                <div className="relative mt-2.5 h-10 py-0 px-3 border-[1px] border-black/20 rounded-lg  flex items-center cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap" onClick={()=>openLanOption()}>
+                  <div className="align-middle">{lang}</div>
                   <span className="absolute right-2">
                     <ChevronDown className="text-main-primary scale-75" />
                   </span>
                 </div>
+                {langShow && <div>
+                  <ul>
+                    <li onClick={() => changeLanguage('en')}>English</li>
+                    <li onClick={() => changeLanguage('ar')}>Arabic</li>
+                  </ul>
+                  </div>}
               </div>
               <div>
                 <div className="mt-4 leading-6 text-[20px] font-bold">
-                  Currency
+                {t('Currency')} 
+                
                 </div>
                 <div className="relative mt-2 h-10 py-0 px-3 border-[1px] border-black/20 rounded-lg  flex items-center cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap">
                   <div className="align-middle">USD (US Dollar)</div>
