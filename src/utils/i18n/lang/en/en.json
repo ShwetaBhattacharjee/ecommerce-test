@@ -1,0 +1,7 @@
+{
+    "welcome": "Welcome to React and react-i18next",
+    "hello":"how are you?",
+    "Language":"Language",
+    "Currency":"Currency",
+    "Ship_to":"Ship to"
+  }
